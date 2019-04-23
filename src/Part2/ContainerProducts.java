@@ -13,6 +13,7 @@ public class ContainerProducts implements List {
         c.add(9);
         System.out.println(Arrays.toString(c.arrayOfProducts));
         System.out.println(c.contains(4));
+        System.out.println(c.get(1));
     }
 
 
@@ -34,7 +35,7 @@ public class ContainerProducts implements List {
         return Arrays.stream(arrayOfProducts).anyMatch((p) -> isElementContains(o, p));
     }
 
-    public boolean isElementContains(Object o, Object p) {
+    private boolean isElementContains(Object o, Object p) {
         return nonNull(o) ? o.equals(p) : o == p;
     }
 
@@ -106,7 +107,7 @@ public class ContainerProducts implements List {
 
     @Override
     public Object get(int index) {
-        return null;
+        return Arrays.stream(arrayOfProducts).skip(index).findFirst().get();
     }
 
     @Override
