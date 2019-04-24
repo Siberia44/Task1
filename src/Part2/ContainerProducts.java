@@ -1,19 +1,32 @@
 package Part2;
 
-import java.lang.reflect.Array;
 import java.util.*;
-import java.util.stream.Stream;
+import java.util.function.Predicate;
 
 import static java.util.Objects.nonNull;
 
 public class ContainerProducts implements List {
+
     public static void main(String[] args) {
         ContainerProducts c = new ContainerProducts();
-        c.add(null);
-        c.add(9);
+        c.add("Hello");
+        c.add("LOL");
+        c.add("privet");
         System.out.println(Arrays.toString(c.arrayOfProducts));
-        System.out.println(c.contains(4));
-        System.out.println(c.get(1));
+        c.add(7, "PRIVET");
+        ArrayList<String> a = new ArrayList<String>();
+        a.add("f");
+        a.add("k");
+        a.add("m");
+        c.addAll(2, a);
+        c.add(2, null);
+        System.out.println(Arrays.toString(c.arrayOfProducts));
+        Iterator it = c.iterator();
+        while (it.hasNext()){
+            System.out.println(it.next());
+        }
+
+
     }
 
 
@@ -39,19 +52,15 @@ public class ContainerProducts implements List {
         return nonNull(o) ? o.equals(p) : o == p;
     }
 
-    @Override
-    public Iterator iterator() {
-        return null;
-    }
 
     @Override
     public Object[] toArray() {
-        return new Object[0];
+        return arrayOfProducts;
     }
 
     @Override
     public Object[] toArray(Object[] a) {
-        return new Object[0];
+        return a;
     }
 
     @Override
@@ -64,38 +73,56 @@ public class ContainerProducts implements List {
 
     @Override
     public boolean remove(Object o) {
-     /*   if (contains(o)){
-            Arrays.stream(arrayOfProducts).forEachOrdered((p) -> );
-        }*/
-        return false;
-    } /////////////////TO DO
+        return nonNull(o) ? changeArrayIfElementIsNotNull(o) : changeArrayIfElementIsNull(o);
+    }
 
+    private boolean changeArrayIfElementIsNull(Object o) {
+        for (int i = 0; i < arrayOfProducts.length; i++) {
+            if (o == arrayOfProducts[i]) {
+                remove(i);
+            }
+        }
+        return true;
+    }
+
+    private boolean changeArrayIfElementIsNotNull(Object o) {
+        for (int i = 0; i < arrayOfProducts.length; i++) {
+            if (o.equals(arrayOfProducts[i])) {
+                remove(i);
+                return true;
+            }
+        }
+        return true;
+    }
 
     @Override
     public boolean containsAll(Collection c) {
-        return c.stream().allMatch((p) -> contains(p));
+        return c.stream().allMatch(this::contains);
 
     }
 
     @Override
     public boolean addAll(Collection c) {
-        c.stream().forEachOrdered((p) -> add(p));
+        c.forEach(this::add);
         return true;
     }
 
     @Override
     public boolean addAll(int index, Collection c) {
+        Collections.reverse((List)c);
+        c.stream().forEach((p) ->add(index, p));
         return false;
     }
 
     @Override
     public boolean removeAll(Collection c) {
-
-        return false;
+        c.stream().filter(this::contains).forEach((p) -> remove(p));
+        return true;
     }
 
     @Override
     public boolean retainAll(Collection c) {
+        c.stream().filter((p) -> !contains(p)).forEach((p) -> remove(p));
         return false;
     }
 
@@ -107,32 +134,66 @@ public class ContainerProducts implements List {
 
     @Override
     public Object get(int index) {
-        return Arrays.stream(arrayOfProducts).skip(index).findFirst().get();
+            return arrayOfProducts[index];
     }
 
     @Override
     public Object set(int index, Object element) {
-        return null;
+            arrayOfProducts[index] = element;
+        return arrayOfProducts[index];
     }
 
     @Override
     public void add(int index, Object element) {
+            add(element);
+            removeLastElementToPosition(index);
+    }
 
+    private void removeLastElementToPosition(int index) {
+        for (int i = arrayOfProducts.length - 1; i > index; i--) {
+            Object tmp = arrayOfProducts[i];
+            arrayOfProducts[i] = arrayOfProducts[i - 1];
+            arrayOfProducts[i - 1] = tmp;
+        }
+    }
+
+    private void removeElementToLastPosition(int index){
+        for (int i = index; i < size; i++) {
+            Object tmp = arrayOfProducts[i];
+            arrayOfProducts[i] = arrayOfProducts[i + 1];
+            arrayOfProducts[i + 1] = tmp;
+        }
     }
 
     @Override
     public Object remove(int index) {
-        return null;
+        Object o = arrayOfProducts[index];
+        --size;
+        removeElementToLastPosition(index);
+        arrayOfProducts = Arrays.copyOf(arrayOfProducts, arrayOfProducts.length  - 1);
+        return o;
     }
+
 
     @Override
     public int indexOf(Object o) {
-        return 0;
+        for (int i = 0; i < arrayOfProducts.length; i++) {
+            if (o.equals(arrayOfProducts[i])){
+                return i;
+            }
+        }
+        return -1;
     }
 
     @Override
     public int lastIndexOf(Object o) {
-        return 0;
+        int tmp = -1;
+        for (int i = 0; i < arrayOfProducts.length; i++) {
+            if (o.equals(arrayOfProducts[i])){
+                tmp = i;
+            }
+        }
+        return tmp;
     }
 
     @Override
@@ -149,4 +210,31 @@ public class ContainerProducts implements List {
     public List subList(int fromIndex, int toIndex) {
         return null;
     }
+
+    @Override
+    public Iterator iterator() {
+        return  new Iterator() {
+            Predicate predicate = Objects::nonNull;
+            int indexForIterator = 0;
+            int checker = 0;
+
+            @Override
+            public boolean hasNext() {
+                if(checker < size) {
+                    while (!predicate.test(arrayOfProducts[checker])) {
+                        checker++;
+                    }
+                }
+                return indexForIterator < size;
+            }
+
+            @Override
+            public Object next() {
+                    indexForIterator = checker;
+                    checker++;
+                    return arrayOfProducts[indexForIterator++];
+            }
+        };
+    }
+
 }
