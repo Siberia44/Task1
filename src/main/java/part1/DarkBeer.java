@@ -3,6 +3,7 @@ package part1;
 import java.util.Objects;
 
 public class DarkBeer extends Beer{
+
     private int percentageRoastedHop;
     private String type;
 
