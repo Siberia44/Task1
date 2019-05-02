@@ -1,26 +1,26 @@
-package part2;
+package Task2;
 
-import part1.Beer;
+import Task1.part1.Beer;
 
 import java.util.*;
 import java.util.function.Predicate;
 
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
-
-public class ContainerProducts<E extends Beer> implements List<E> {
-
+public class COWList <E extends Beer> implements List<E>{
     private Beer[] arrayOfProducts;
     private int size;
 
-    public ContainerProducts() {
+    public COWList() {
         size = 0;
         arrayOfProducts = new Beer[size];
     }
 
     @Override
     public int size() {
-        return size;
+        return size > Integer.MAX_VALUE ? Integer.MAX_VALUE : size;
+
     }
 
     @Override
@@ -34,19 +34,31 @@ public class ContainerProducts<E extends Beer> implements List<E> {
     }
 
     @Override
+    public int indexOf(Object o) {
+        if (isNull(o)) {
+            for (int i = 0; i < size; i++)
+                if (isNull(arrayOfProducts[i]))
+                    return i;
+        } else {
+            for (int i = 0; i < size; i++)
+                if (o.equals(arrayOfProducts[i]))
+                    return i;
+        }
+        return -1;
+    }
+
+    @Override
     public Object[] toArray() {
         return Arrays.copyOf(arrayOfProducts, size);
     }
 
     @Override
     public <T> T[] toArray(T[] a) {
-        if (a.length < size) {
+        if (a.length < size)
             return (T[]) Arrays.copyOf(arrayOfProducts, size, a.getClass());
-        }
         System.arraycopy(arrayOfProducts, 0, a, 0, size);
-        if (a.length > size) {
+        if (a.length > size)
             a[size] = null;
-        }
         return a;
     }
 
@@ -63,7 +75,6 @@ public class ContainerProducts<E extends Beer> implements List<E> {
     public boolean remove(Object o) {
         return nonNull(o) ? changeArrayIfElementIsNotNull(o) : changeArrayIfElementIsNull(o);
     }
-
 
 
     @Override
@@ -146,9 +157,6 @@ public class ContainerProducts<E extends Beer> implements List<E> {
     @Override
     public void add(int index, E element) {
         checkIndex(index);
-        if (index > size) {
-            throw new IndexOutOfBoundsException();
-        }
         add(element);
         removeLastElementToPosition(index);
     }
@@ -162,21 +170,6 @@ public class ContainerProducts<E extends Beer> implements List<E> {
         removeElementToLastPosition(index);
         arrayOfProducts = Arrays.copyOf(arrayOfProducts, size);
         return (E) o;
-    }
-
-
-    @Override
-    public int indexOf(Object o) {
-        if (!nonNull(o)) {
-            for (int i = 0; i < size; i++)
-                if (!nonNull(arrayOfProducts[i]))
-                    return i;
-        } else {
-            for (int i = 0; i < size; i++)
-                if (o.equals(arrayOfProducts[i]))
-                    return i;
-        }
-        return -1;
     }
 
     @Override
@@ -221,7 +214,7 @@ public class ContainerProducts<E extends Beer> implements List<E> {
 
             @Override
             public Object next() {
-                if (!hasNext()){
+                if (!hasNext()) {
                     throw new NoSuchElementException();
                 }
                 return arrayOfProducts[currentIndex++];
@@ -300,23 +293,46 @@ public class ContainerProducts<E extends Beer> implements List<E> {
          */
         @Override
         public boolean hasNext() {
-            if (checker < containerProducts.size()) {
-                while (!predicate.test(containerProducts.get(checker)) && checker < containerProducts.size()) {
-                    checker++;
-                }
-            }
-            return indexForIterator < containerProducts.size();
+            while (checker < containerProducts.size()
+                    && !predicate.test((E) containerProducts.get(checker)))
+                checker++;
+            return checker < containerProducts.size();
         }
-
 
         /**
          * Returns the next element in the iteration;
          **/
         @Override
+        public E next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            } else {
+                indexForIterator = checker;
+                checker++;
+                return (E) containerProducts.get(indexForIterator);
+            }
+        }
+    }
+
+    class COWIterator implements Iterator{
+        private int currentIndex = 0;
+        private Beer[] copyOfArray;
+
+        public COWIterator(Beer[] copyOfArray) {
+            this.copyOfArray = copyOfArray;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return currentIndex < size;
+        }
+
+        @Override
         public Object next() {
-            indexForIterator = checker;
-            checker++;
-            return containerProducts.get(indexForIterator);
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+            return copyOfArray[currentIndex++];
         }
     }
 }

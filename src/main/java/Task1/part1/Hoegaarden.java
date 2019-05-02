@@ -1,9 +1,8 @@
-package part1;
+package Task1.part1;
 
 import java.util.Objects;
 
 public class Hoegaarden extends LightBeer{
-
     private String typeOfBottle;
     private String taste;
 

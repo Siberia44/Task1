@@ -1,4 +1,4 @@
-package part1;
+package Task1.part1;
 
 import java.util.Objects;
 

@@ -1,4 +1,4 @@
-package part1;
+package Task1.part1;
 
 import java.util.Objects;
 
@@ -8,7 +8,6 @@ public class Beer {
     private String country;
 
     public Beer() {
-
     }
 
     public Beer(String name, int alcoholPercentage, String country) {

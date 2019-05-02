@@ -1,10 +1,13 @@
-package part2;
+package Task1.part2;
 
+import Task1.part1.Beer;
 import org.junit.Before;
 import org.junit.Test;
-import part1.Beer;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.function.Predicate;
 
 import static org.junit.Assert.*;
@@ -33,7 +36,6 @@ public class ContainerProductsTest {
         beer2.setName("beer2");
         beer3.setName("beer3");
         beer4.setName("beer4");
-
     }
 
     @Test
@@ -42,15 +44,13 @@ public class ContainerProductsTest {
         assertFalse(list.isEmpty());
     }
 
-
     @Test
     public void isEmptyShouldReturnTrueIfNoElementsInCollection() {
         assertTrue(list.isEmpty());
     }
 
-
     @Test
-    public void sizeShouldReturnZeroWhenCallThisMethod() {
+    public void sizeShouldReturnZeroWhenCollectionIsEmpty() {
         int actually = list.size();
         int expected = 0;
         assertEquals(actually, expected);
@@ -97,7 +97,6 @@ public class ContainerProductsTest {
         list.toArray(null);
     }
 
-
     @Test
     public void addShouldIncrementSizeWhenInsertElement() {
         int sizeBeforeAddElement = list.size();
@@ -124,7 +123,6 @@ public class ContainerProductsTest {
         assertTrue(list.add(beer1));
     }
 
-
     @Test
     public void removeByObjectShouldDecrementSizeWhenDeleteElement() {
         int sizeBeforeAddingElement = list.size();
@@ -137,7 +135,7 @@ public class ContainerProductsTest {
     public void removeByObjectShouldDeleteElementFromList() {
         list.add(beer1);
         list.remove(beer1);
-        assertTrue(list.size() < 1);
+        assertTrue(list.isEmpty());
     }
 
     @Test
@@ -153,7 +151,6 @@ public class ContainerProductsTest {
         list.remove(null);
         assertEquals(list.get(1), beer3);
     }
-
 
     @Test
     public void addAllShouldIncreaseSizeOfCustomCollectionByTheNumberOfItemsInTheCollectionInParam() {
@@ -174,13 +171,9 @@ public class ContainerProductsTest {
         test.add(beer1);
         test.add(beer2);
         list.addAll(test);
-        int count = 0;
-        for (int i = 1; i < list.size(); i++) {
-            if (list.toArray()[i].equals(test.toArray()[i - 1])) {
-                count++;
-            }
-        }
-        assertEquals(count, 2);
+        assertEquals(list.get(1), test.get(0));
+        assertEquals(list.get(2), test.get(1));
+        assertEquals(list.size(), 3);
     }
 
     @Test
@@ -192,7 +185,6 @@ public class ContainerProductsTest {
         list.removeAll(arrayList);
         assertEquals(list.size(), 1);
         assertEquals(list.get(0), beer2);
-
     }
 
     @Test
@@ -290,7 +282,6 @@ public class ContainerProductsTest {
         list.addAll(1, arrayList);
         int afterAdd = list.size();
         assertEquals(beforeAdd + 2, afterAdd);
-
     }
 
     @Test
@@ -340,7 +331,6 @@ public class ContainerProductsTest {
         assertEquals(sizeBeforeAdd + 1, sizeAfterAdd);
     }
 
-
     @Test(expected = IndexOutOfBoundsException.class)
     public void addWithParamsShouldThrowExceptionIfIndexMorTHanSize() {
         list.add(beer1);
@@ -379,17 +369,17 @@ public class ContainerProductsTest {
     }
 
     @Test
-    public void iteratorHasNextShouldReturnFalseOnEmptyCollection(){
+    public void iteratorHasNextShouldReturnFalseOnEmptyCollection() {
         assertFalse(iterator.hasNext());
     }
 
     @Test(expected = NoSuchElementException.class)
-    public void iteratorNextShouldThrowException(){
+    public void iteratorNextShouldThrowException() {
         iterator.next();
     }
 
     @Test
-    public void iteratorHasNextShouldReturnTrueOnCollectionWithOneItemSeveralTimes(){
+    public void iteratorHasNextShouldReturnTrueOnCollectionWithOneItemSeveralTimes() {
         list.add(beer1);
         assertTrue(iterator.hasNext());
         assertTrue(iterator.hasNext());
@@ -397,7 +387,7 @@ public class ContainerProductsTest {
     }
 
     @Test
-    public void iteratorShouldWorkWithCollectionWithOneElementCorrect(){
+    public void iteratorShouldWorkWithCollectionWithOneElementCorrect() {
         list.add(beer1);
         assertTrue(iterator.hasNext());
         assertEquals(iterator.next(), beer1);
@@ -406,7 +396,7 @@ public class ContainerProductsTest {
     }
 
     @Test
-    public void iteratorShouldWorkWithCollectionWithMoreThanOneElementCorrect(){
+    public void iteratorShouldWorkWithCollectionWithMoreThanOneElementCorrect() {
         list.add(beer1);
         list.add(beer2);
         list.add(beer3);
@@ -420,25 +410,46 @@ public class ContainerProductsTest {
     }
 
     @Test
-    public void customIteratorHasNextShouldReturnFalseWithEmptyCollection(){
+    public void customIteratorHasNextShouldReturnFalseWithEmptyCollection() {
         assertFalse(customIterator.hasNext());
     }
 
     @Test
-    public void customIteratorHasNextShouldReturnFalseWithOneNullElementInCollection(){
+    public void customIteratorHasNextShouldReturnFalseWithOneNullElementInCollection() {
         list.add(null);
         assertFalse(customIterator.hasNext());
     }
 
     @Test
-    public void customIteratorHasNextShouldReturnTrueWithTwoElementInCollectionAndNextReturnLastElement(){
+    public void customIteratorHasNextShouldReturnTrueWithTwoElementInCollectionAndNextReturnLastElement() {
         list.add(null);
         list.add(beer1);
         assertTrue(customIterator.hasNext());
         assertEquals(customIterator.next(), beer1);
     }
 
+    @Test
+    public void customIteratorShouldWorkWithCollectionWithMoreThanOneElementCorrect() {
+        list.add(beer1);
+        list.add(null);
+        list.add(beer3);
+        list.add(null);
+        assertTrue(customIterator.hasNext());
+        assertEquals(customIterator.next(), beer1);
+        assertTrue(customIterator.hasNext());
+        assertEquals(customIterator.next(), beer3);
+        assertFalse(customIterator.hasNext());
+    }
+
+    @Test(expected = NoSuchElementException.class)
+    public void customIteratorNextShouldThrowNoSuchElementException() {
+        customIterator.next();
+    }
+
 
 }
+
+
+
 
 
