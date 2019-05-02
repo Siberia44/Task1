@@ -4,57 +4,72 @@ import part1.Beer;
 
 import java.util.*;
 import java.util.function.Predicate;
+
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
 
 public class ContainerProducts<E extends Beer> implements List<E> {
-    public static void main(String[] args) {
-        ArrayList arrayList = new ArrayList();
-    }
 
-    private Beer[] arrayOfProducts = new Beer[0];
-    private int size = 10;
+    private Beer[] arrayOfProducts;
+    private int size;
+
+    public ContainerProducts() {
+        size = 0;
+        arrayOfProducts = new Beer[size];
+    }
 
     @Override
     public int size() {
-        return size;
+        return size > Integer.MAX_VALUE ? Integer.MAX_VALUE : size;
+
     }
 
     @Override
     public boolean isEmpty() {
         return size() == 0;
-    } ////////////////////////
+    }
 
     @Override
     public boolean contains(Object o) {
-        for (int i = 0; i < size; i++) {
-            if (isElementContains(o, arrayOfProducts[i])){
-                return true;
-            }
+        return indexOf(o) >= 0;
+    }
+
+    @Override
+    public int indexOf(Object o) {
+        if (isNull(o)) {
+            for (int i = 0; i < size; i++)
+                if (isNull(arrayOfProducts[i]))
+                    return i;
+        } else {
+            for (int i = 0; i < size; i++)
+                if (o.equals(arrayOfProducts[i]))
+                    return i;
         }
-        return false;
+        return -1;
     }
-
-    private boolean isElementContains(Object o, Object p) {
-        return nonNull(o) ? o.equals(p) : o == p;
-    }
-
 
     @Override
     public Object[] toArray() {
-        return Arrays.copyOf(arrayOfProducts, arrayOfProducts.length);
+        return Arrays.copyOf(arrayOfProducts, size);
     }
 
     @Override
-    public Object[] toArray(Object[] a) {
+    public <T> T[] toArray(T[] a) {
+        if (a.length < size)
+            return (T[]) Arrays.copyOf(arrayOfProducts, size, a.getClass());
+        System.arraycopy(arrayOfProducts, 0, a, 0, size);
+        if (a.length > size)
+            a[size] = null;
         return a;
     }
 
     @Override
     public boolean add(E o) {
-        arrayOfProducts = Arrays.copyOf(arrayOfProducts, arrayOfProducts.length + 1);
-        arrayOfProducts[size] = o;
-        size++;
+        if (arrayOfProducts.length == size) {
+            arrayOfProducts = Arrays.copyOf(arrayOfProducts, arrayOfProducts.length + 10);
+        }
+        arrayOfProducts[size++] = o;
         return true;
     }
 
@@ -63,56 +78,43 @@ public class ContainerProducts<E extends Beer> implements List<E> {
         return nonNull(o) ? changeArrayIfElementIsNotNull(o) : changeArrayIfElementIsNull(o);
     }
 
-    private boolean changeArrayIfElementIsNull(Object o) {
-        for (int i = 0; i < arrayOfProducts.length; i++) {
-            if (o == arrayOfProducts[i]) {
-                remove(i);
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean changeArrayIfElementIsNotNull(Object o) {
-        for (int i = 0; i < arrayOfProducts.length; i++) {
-            if (o.equals(arrayOfProducts[i])) {
-                remove(i);
-                return true;
-            }
-        }
-        return false;
-    }
 
     @Override
     public boolean containsAll(Collection c) {
-        int count = 0;
-        for (int i = 0; i < c.size(); i++) {
-            if (contains(c.toArray()[i])){
-                count++;
+        for (Object element : c) {
+            if (!contains(element)) {
+                return false;
             }
         }
-        return count == c.size();
-
+        return true;
     }
 
     @Override
-    public boolean addAll(Collection c) {
-      return true;
+    public boolean addAll(Collection<? extends E> c) {
+        for (E element : c) {
+            add(element);
+        }
+        return true;
     }
+
 
     @Override
     public boolean addAll(int index, Collection c) {
+        checkIndex(index);
+        int tmpIndex = index;
         int tmpSize = size();
-        Collections.reverse((List)c);
-        c.forEach((p) ->add(index, (E)p));
+        for (int i = 0; i < c.size(); i++) {
+            add(tmpIndex++, (E) c.toArray()[i]);
+        }
         return size() == tmpSize + c.size();
     }
 
     @Override
     public boolean removeAll(Collection c) {
+        Objects.requireNonNull(c);
         boolean flag = false;
         for (int i = 0; i < c.size(); i++) {
-            if (contains(c.toArray()[i])){
+            if (contains(c.toArray()[i])) {
                 remove(c.toArray()[i]);
                 flag = true;
             }
@@ -121,12 +123,12 @@ public class ContainerProducts<E extends Beer> implements List<E> {
     }
 
 
-
     @Override
     public boolean retainAll(Collection c) {
+        Objects.requireNonNull(c);
         boolean flag = false;
-        for (int i = 0; i < arrayOfProducts.length; i++) {
-            if (!c.contains(arrayOfProducts[i])){
+        for (int i = 0; i < size; i++) {
+            if (!c.contains(arrayOfProducts[i])) {
                 remove(arrayOfProducts[i]);
                 flag = true;
             }
@@ -142,69 +144,44 @@ public class ContainerProducts<E extends Beer> implements List<E> {
 
     @Override
     public E get(int index) {
-            return (E)arrayOfProducts[index];
+        checkIndex(index);
+        return (E) arrayOfProducts[index];
     }
 
     @Override
     public E set(int index, E element) {
+        checkIndex(index);
+        Beer tmp = arrayOfProducts[index];
         arrayOfProducts[index] = element;
-        return (E)arrayOfProducts[index];
+        return (E) tmp;
     }
 
     @Override
     public void add(int index, E element) {
-            add(element);
-            removeLastElementToPosition(index);
+        checkIndex(index);
+        add(element);
+        removeLastElementToPosition(index);
     }
 
-    private void removeLastElementToPosition(int index) {
-        for (int i = arrayOfProducts.length - 1; i > index; i--) {
-            Beer tmp = arrayOfProducts[i];
-            arrayOfProducts[i] = arrayOfProducts[i - 1];
-            arrayOfProducts[i - 1] = tmp;
-        }
-    }
-
-    private void removeElementToLastPosition(int index){
-        for (int i = index; i < size; i++) {
-            Beer tmp = arrayOfProducts[i];
-            arrayOfProducts[i] = arrayOfProducts[i + 1];
-            arrayOfProducts[i + 1] = tmp;
-        }
-    }
 
     @Override
     public E remove(int index) {
+        checkIndex(index);
         Beer o = arrayOfProducts[index];
-        --size;
+        size--;
         removeElementToLastPosition(index);
-        arrayOfProducts = Arrays.copyOf(arrayOfProducts, arrayOfProducts.length  - 1);
-        return (E)o;
-    }
-
-
-    @Override
-    public int indexOf(Object o) {
-        if (!nonNull(o)) {
-            for (int i = 0; i < size; i++)
-                if (!nonNull(arrayOfProducts[i]))
-                    return i;
-        } else {
-            for (int i = 0; i < size; i++)
-                if (o.equals(arrayOfProducts[i]))
-                    return i;
-        }
-        return -1;
+        arrayOfProducts = Arrays.copyOf(arrayOfProducts, size);
+        return (E) o;
     }
 
     @Override
     public int lastIndexOf(Object o) {
         if (!nonNull(o)) {
-            for (int i = size-1; i >= 0; i--)
+            for (int i = size - 1; i >= 0; i--)
                 if (!nonNull(arrayOfProducts[i]))
                     return i;
         } else {
-            for (int i = size-1; i >= 0; i--)
+            for (int i = size - 1; i >= 0; i--)
                 if (o.equals(arrayOfProducts[i]))
                     return i;
         }
@@ -212,20 +189,19 @@ public class ContainerProducts<E extends Beer> implements List<E> {
     }
 
 
-
     @Override
     public ListIterator listIterator() {
-        throw new NullPointerException();
+        return null;
     }
 
     @Override
     public ListIterator listIterator(int index) {
-        throw new NullPointerException();
+        return null;
     }
 
     @Override
     public List subList(int fromIndex, int toIndex) {
-        throw new NullPointerException();
+        return null;
     }
 
     @Override
@@ -240,6 +216,9 @@ public class ContainerProducts<E extends Beer> implements List<E> {
 
             @Override
             public Object next() {
+                if (!hasNext()) {
+                    throw new NoSuchElementException();
+                }
                 return arrayOfProducts[currentIndex++];
             }
 
@@ -254,40 +233,86 @@ public class ContainerProducts<E extends Beer> implements List<E> {
                 '}';
     }
 
+    private boolean changeArrayIfElementIsNull(Object o) {
+        for (int i = 0; i < size; i++) {
+            if (o == arrayOfProducts[i]) {
+                remove(i);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean changeArrayIfElementIsNotNull(Object o) {
+        for (int i = 0; i < size; i++) {
+            if (o.equals(arrayOfProducts[i])) {
+                remove(i);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void checkIndex(int index) {
+        if ((index > size) || (index < 0)) {
+            throw new IndexOutOfBoundsException("Index is " + index + ", but size is " + size);
+        }
+    }
+
+    private void removeLastElementToPosition(int index) {
+        checkIndex(index);
+        for (int i = size - 1; i > index; i--) {
+            Beer tmp = arrayOfProducts[i];
+            arrayOfProducts[i] = arrayOfProducts[i - 1];
+            arrayOfProducts[i - 1] = tmp;
+        }
+    }
+
+    private void removeElementToLastPosition(int index) {
+        checkIndex(index);
+        for (int i = index; i < size; i++) {
+            Beer tmp = arrayOfProducts[i];
+            arrayOfProducts[i] = arrayOfProducts[i + 1];
+            arrayOfProducts[i + 1] = tmp;
+        }
+    }
+
     class CustomIterator implements Iterator {
         Predicate predicate;
+        List<Beer> containerProducts;
         int indexForIterator = 0;
         int checker = 0;
 
-        public CustomIterator(Predicate predicate) {
+        public CustomIterator(Predicate predicate, List containerProducts) {
             this.predicate = predicate;
+            this.containerProducts = containerProducts;
         }
 
         /**
-         Returns true if the iteration has more elements than math che predicate.
-         (In other words, returns true if next would return an
-         element rather than throwing an exception.)
-         *
+         * Returns true if the iteration has more elements than math che predicate.
+         * (In other words, returns true if next would return an
+         * element rather than throwing an exception.)
          */
         @Override
         public boolean hasNext() {
-            if(checker < size) {
-                while (!predicate.test(arrayOfProducts[checker])) {
-                    checker++;
-                }
-            }
-            return indexForIterator < size;
+            while (checker < containerProducts.size()
+                    && !predicate.test((E) containerProducts.get(checker)))
+                checker++;
+            return checker < containerProducts.size();
         }
 
-
         /**
-         Returns the next element in the iteration;
+         * Returns the next element in the iteration;
          **/
         @Override
-        public Object next() {
-            indexForIterator = checker;
-            checker++;
-            return arrayOfProducts[indexForIterator++];
+        public E next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            } else {
+                indexForIterator = checker;
+                checker++;
+                return (E) containerProducts.get(indexForIterator);
+            }
         }
     }
 }
